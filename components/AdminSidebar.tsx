@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, MessageSquare, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderKanban, Mail, Users, MessageSquare, LogOut } from 'lucide-react';
 
 const NAV = [
-  { href: '/',         label: 'Overview',  icon: LayoutDashboard },
-  { href: '/blogs',    label: 'Blogs',     icon: FileText },
-  { href: '/comments', label: 'Comments',  icon: MessageSquare },
+  { href: '/',             label: 'Overview',     icon: LayoutDashboard },
+  { href: '/blogs',        label: 'Blogs',        icon: FileText },
+  { href: '/projects',     label: 'Projects',     icon: FolderKanban },
+  { href: '/newsletters',  label: 'Newsletters',  icon: Mail },
+  { href: '/subscribers',  label: 'Subscribers',  icon: Users },
+  { href: '/comments',     label: 'Comments',     icon: MessageSquare },
 ];
 
 export default function AdminSidebar() {
