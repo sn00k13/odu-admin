@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const ADMIN_COOKIE = 'odu_admin_auth';
+const SESSION_SECONDS = 60 * 30; // 30-minute inactivity timeout
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,7 +19,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  return NextResponse.next();
+  // Slide the session window on every authenticated page request
+  const response = NextResponse.next();
+  response.cookies.set(ADMIN_COOKIE, expected, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: SESSION_SECONDS,
+  });
+  return response;
 }
 
 export const config = {

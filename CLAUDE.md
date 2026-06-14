@@ -20,9 +20,9 @@ The public-facing site lives at `../odu-nextjs`. Both projects share the same Su
 
 Authentication is **custom cookie-based**, not Supabase Auth. There is no Supabase JWT involved.
 
-- Login: `POST /api/login` — validates a password against `ADMIN_PASSWORD` env var, sets `odu_admin_auth` cookie
+- Login: `POST /api/login` — validates a password against `ADMIN_PASSWORD` env var, sets `odu_admin_auth` cookie with a 30-minute expiry
 - Logout: `POST /api/logout`
-- Guard: `middleware.ts` redirects all non-`/login`, non-`/api/*` routes to `/login` if the cookie is missing or wrong
+- Guard: `middleware.ts` redirects all non-`/login`, non-`/api/*` routes to `/login` if the cookie is missing or wrong. On every successful page request it resets the cookie to 30 minutes (sliding window inactivity timeout).
 - Server-side check: `lib/auth.ts` → `isAdmin()` — call this at the top of every API route handler before touching the database
 
 ## Supabase client usage — critical distinction

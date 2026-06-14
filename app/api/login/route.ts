@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 30, // 30-minute inactivity timeout, slid by middleware on each request
   });
 
   return NextResponse.json({ ok: true });
