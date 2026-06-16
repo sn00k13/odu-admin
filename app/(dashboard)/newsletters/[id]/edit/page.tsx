@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSingleNewsletter } from '@/lib/data';
+import { isSuperAdmin } from '@/lib/auth';
 import NewsletterForm from '@/components/NewsletterForm';
 
 export const metadata: Metadata = { title: 'Edit Newsletter' };
@@ -11,6 +12,8 @@ export default async function EditNewsletterPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  if (!(await isSuperAdmin())) redirect('/newsletters');
+
   const { id } = await params;
   const newsletter = await getSingleNewsletter(Number(id));
   if (!newsletter) notFound();

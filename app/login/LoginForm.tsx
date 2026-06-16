@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,20 +18,36 @@ export default function LoginForm() {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ email, password }),
     });
 
     if (res.ok) {
       router.push('/');
       router.refresh();
     } else {
-      setError('Incorrect password.');
+      const data = await res.json();
+      setError(data.error ?? 'Invalid email or password.');
       setLoading(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-gray-100 rounded p-6 shadow-sm space-y-4">
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoFocus
+          autoComplete="email"
+          className="w-full border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+        />
+      </div>
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
           Password
@@ -41,7 +58,7 @@ export default function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          autoFocus
+          autoComplete="current-password"
           className="w-full border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         />
       </div>

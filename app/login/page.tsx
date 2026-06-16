@@ -9,7 +9,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Odu Admin</h1>
-          <p className="text-gray-500 text-sm mt-1">Enter the admin password to continue</p>
+          <p className="text-gray-500 text-sm mt-1">Sign in to your admin account</p>
         </div>
         <LoginForm />
       </div>

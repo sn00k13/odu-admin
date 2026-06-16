@@ -1,24 +1,25 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
-const ADMIN_COOKIE = 'odu_admin_auth';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
-  const { password } = await req.json();
-  const expected = process.env.ADMIN_PASSWORD;
+  const { email, password } = await req.json();
 
-  if (!expected || password !== expected) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!email || !password) {
+    return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
   }
 
-  const jar = await cookies();
-  jar.set(ADMIN_COOKIE, expected, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 30, // 30-minute inactivity timeout, slid by middleware on each request
-  });
+  const sb = await createClient();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error || !data.user) {
+    return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+  }
+
+  const role = data.user.app_metadata?.role;
+  if (role !== 'admin' && role !== 'super_admin') {
+    await sb.auth.signOut();
+    return NextResponse.json({ error: 'Not authorized as an admin' }, { status: 401 });
+  }
 
   return NextResponse.json({ ok: true });
 }

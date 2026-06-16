@@ -1,13 +1,15 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
+import Image from '@tiptap/extension-image';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Code2, Minus,
-  Undo2, Redo2,
+  Undo2, Redo2, ImagePlus, Loader2,
 } from 'lucide-react';
 
 interface Props {
@@ -15,16 +17,20 @@ interface Props {
   onChange: (html: string) => void;
 }
 
+const CLOUD_NAME    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
 function Divider() {
   return <div className="w-px self-stretch bg-gray-200 mx-0.5" />;
 }
 
 function Btn({
-  onClick, active, title, children,
+  onClick, active, title, disabled, children,
 }: {
   onClick: () => void;
   active?: boolean;
   title?: string;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -32,7 +38,8 @@ function Btn({
       type="button"
       title={title}
       onClick={onClick}
-      className={`p-1.5 rounded transition-colors ${
+      disabled={disabled}
+      className={`p-1.5 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
         active ? 'bg-gray-200 text-gray-900' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
       }`}
     >
@@ -42,8 +49,12 @@ function Btn({
 }
 
 export default function BlogEditor({ content, onChange }: Props) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
   const editor = useEditor({
-    extensions: [StarterKit, Underline],
+    extensions: [StarterKit, Underline, Image.configure({ inline: false, allowBase64: false })],
     content,
     onUpdate({ editor }) {
       onChange(editor.getHTML());
@@ -52,6 +63,45 @@ export default function BlogEditor({ content, onChange }: Props) {
       attributes: { class: 'tiptap-editor' },
     },
   });
+
+  async function handleImageFile(file: File) {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file.');
+      return;
+    }
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      setUploadError('Cloudinary env vars are not configured.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    const body = new FormData();
+    body.append('file', file);
+    body.append('upload_preset', UPLOAD_PRESET);
+
+    try {
+      const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body });
+      const data = await res.json();
+
+      if (data.secure_url) {
+        editor?.chain().focus().setImage({ src: data.secure_url }).run();
+      } else {
+        setUploadError(data.error?.message ?? 'Upload failed.');
+      }
+    } catch {
+      setUploadError('Upload failed — check your connection and Cloudinary settings.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) handleImageFile(file);
+    e.target.value = '';
+  }
 
   if (!editor) return null;
 
@@ -106,6 +156,12 @@ export default function BlogEditor({ content, onChange }: Props) {
 
         <Divider />
 
+        <Btn onClick={() => fileRef.current?.click()} disabled={uploading} title="Insert image">
+          {uploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+        </Btn>
+
+        <Divider />
+
         <Btn onClick={() => e.chain().focus().undo().run()} title="Undo">
           <Undo2 size={14} />
         </Btn>
@@ -113,6 +169,14 @@ export default function BlogEditor({ content, onChange }: Props) {
           <Redo2 size={14} />
         </Btn>
       </div>
+
+      {uploadError && (
+        <div className="px-3 py-1.5 text-xs text-red-600 bg-red-50 border-b border-red-100">
+          {uploadError}
+        </div>
+      )}
+
+      <input ref={fileRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
 
       <EditorContent editor={editor} />
     </div>

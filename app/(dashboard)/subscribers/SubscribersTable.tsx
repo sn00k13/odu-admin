@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import type { Subscriber } from '@/lib/types';
 
 function formatDate(iso: string) {
@@ -9,7 +10,33 @@ function formatDate(iso: string) {
   });
 }
 
-export default function SubscribersTable({ initialSubscribers }: { initialSubscribers: Subscriber[] }) {
+function exportCSV(subscribers: Subscriber[]) {
+  const rows = [
+    ['Email', 'Name', 'Status', 'Joined'],
+    ...subscribers.map((s) => [
+      s.email,
+      s.name ?? '',
+      s.subscribed ? 'Active' : 'Unsubscribed',
+      formatDate(s.created_at),
+    ]),
+  ];
+  const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export default function SubscribersTable({
+  initialSubscribers,
+  isSuperAdmin,
+}: {
+  initialSubscribers: Subscriber[];
+  isSuperAdmin: boolean;
+}) {
   const [subscribers, setSubscribers] = useState<Subscriber[]>(initialSubscribers);
 
   async function toggleSubscribed(id: number, current: boolean) {
@@ -38,10 +65,20 @@ export default function SubscribersTable({ initialSubscribers }: { initialSubscr
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 text-sm text-gray-500">
-        <span><strong className="text-gray-900">{subscribers.length}</strong> total</span>
-        <span><strong className="text-green-700">{active}</strong> active</span>
-        <span><strong className="text-gray-500">{inactive}</strong> unsubscribed</span>
+      <div className="flex items-center justify-between">
+        <div className="flex gap-4 text-sm text-gray-500">
+          <span><strong className="text-gray-900">{subscribers.length}</strong> total</span>
+          <span><strong className="text-green-700">{active}</strong> active</span>
+          <span><strong className="text-gray-500">{inactive}</strong> unsubscribed</span>
+        </div>
+        <button
+          onClick={() => exportCSV(subscribers)}
+          disabled={subscribers.length === 0}
+          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Download size={14} />
+          Export CSV
+        </button>
       </div>
 
       <div className="bg-white border border-gray-100 rounded shadow-sm overflow-x-auto">
@@ -52,13 +89,15 @@ export default function SubscribersTable({ initialSubscribers }: { initialSubscr
               <th>Name</th>
               <th>Joined</th>
               <th>Status</th>
-              <th>Actions</th>
+              {isSuperAdmin && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
             {subscribers.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-gray-400 py-8">No subscribers yet.</td>
+                <td colSpan={isSuperAdmin ? 5 : 4} className="text-center text-gray-400 py-8">
+                  No subscribers yet.
+                </td>
               </tr>
             )}
             {subscribers.map((s) => (
@@ -73,22 +112,24 @@ export default function SubscribersTable({ initialSubscribers }: { initialSubscr
                     {s.subscribed ? 'Active' : 'Unsubscribed'}
                   </span>
                 </td>
-                <td>
-                  <div className="flex gap-3 whitespace-nowrap">
-                    <button
-                      onClick={() => toggleSubscribed(s.id, s.subscribed)}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      {s.subscribed ? 'Unsubscribe' : 'Resubscribe'}
-                    </button>
-                    <button
-                      onClick={() => deleteSubscriber(s.id)}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
+                {isSuperAdmin && (
+                  <td>
+                    <div className="flex gap-3 whitespace-nowrap">
+                      <button
+                        onClick={() => toggleSubscribed(s.id, s.subscribed)}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        {s.subscribed ? 'Unsubscribe' : 'Resubscribe'}
+                      </button>
+                      <button
+                        onClick={() => deleteSubscriber(s.id)}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

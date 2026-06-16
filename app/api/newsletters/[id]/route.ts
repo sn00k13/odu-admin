@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
+import { isSuperAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, { params }: Ctx) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isSuperAdmin())) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { id } = await params;
@@ -37,8 +37,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
 }
 
 export async function DELETE(_req: Request, { params }: Ctx) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isSuperAdmin())) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { id } = await params;

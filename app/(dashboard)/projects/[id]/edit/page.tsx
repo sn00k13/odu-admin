@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSingleProject } from '@/lib/data';
+import { isSuperAdmin } from '@/lib/auth';
 import ProjectForm from '@/components/ProjectForm';
 
 export const metadata: Metadata = { title: 'Edit Project' };
@@ -11,6 +12,8 @@ export default async function EditProjectPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  if (!(await isSuperAdmin())) redirect('/projects');
+
   const { id } = await params;
   const project = await getSingleProject(Number(id));
   if (!project) notFound();

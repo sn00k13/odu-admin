@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
+import { isSuperAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(req: Request) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!(await isSuperAdmin())) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const body = await req.json();

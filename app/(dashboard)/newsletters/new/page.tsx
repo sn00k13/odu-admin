@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { isSuperAdmin } from '@/lib/auth';
 import NewsletterForm from '@/components/NewsletterForm';
 
 export const metadata: Metadata = { title: 'New Newsletter' };
 
-export default function NewNewsletterPage() {
+export default async function NewNewsletterPage() {
+  if (!(await isSuperAdmin())) redirect('/newsletters');
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-8">

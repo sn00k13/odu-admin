@@ -1,34 +1,45 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
-const ADMIN_COOKIE = 'odu_admin_auth';
-const SESSION_SECONDS = 60 * 30; // 30-minute inactivity timeout
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Pass through login page and all API routes
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+
+  // Refresh the session on every request so tokens stay valid
+  const { data: { user } } = await supabase.auth.getUser();
+
   if (pathname.startsWith('/login') || pathname.startsWith('/api/')) {
-    return NextResponse.next();
+    return supabaseResponse;
   }
 
-  const cookie = request.cookies.get(ADMIN_COOKIE);
-  const expected = process.env.ADMIN_PASSWORD;
+  const role = user?.app_metadata?.role;
+  const isAdminUser = role === 'admin' || role === 'super_admin';
 
-  if (!cookie || !expected || cookie.value !== expected) {
+  if (!isAdminUser) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Slide the session window on every authenticated page request
-  const response = NextResponse.next();
-  response.cookies.set(ADMIN_COOKIE, expected, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: SESSION_SECONDS,
-  });
-  return response;
+  return supabaseResponse;
 }
 
 export const config = {

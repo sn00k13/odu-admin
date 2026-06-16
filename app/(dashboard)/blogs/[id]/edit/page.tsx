@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSingleBlog } from '@/lib/data';
+import { isSuperAdmin } from '@/lib/auth';
 import BlogForm from '@/components/BlogForm';
 
 export const metadata: Metadata = { title: 'Edit Blog Post' };
@@ -11,6 +12,8 @@ export default async function EditBlogPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  if (!(await isSuperAdmin())) redirect('/blogs');
+
   const { id } = await params;
   const blog = await getSingleBlog(Number(id));
   if (!blog) notFound();

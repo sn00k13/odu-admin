@@ -56,6 +56,8 @@ body {
 }
 .tiptap-editor .ProseMirror pre code { background: none; color: inherit; padding: 0; }
 .tiptap-editor .ProseMirror hr { border: none; border-top: 1px solid #E5E7EB; margin: 1.25rem 0; }
+.tiptap-editor .ProseMirror img { max-width: 100%; height: auto; border-radius: 6px; margin: 0.75rem 0; display: block; }
+.tiptap-editor .ProseMirror img.ProseMirror-selectednode { outline: 2px solid #DC2626; outline-offset: 2px; }
 .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
   color: #9CA3AF;
   content: attr(data-placeholder);

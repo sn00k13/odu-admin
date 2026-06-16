@@ -10,7 +10,13 @@ function formatDate(iso: string) {
   });
 }
 
-export default function NewslettersTable({ initialNewsletters }: { initialNewsletters: Newsletter[] }) {
+export default function NewslettersTable({
+  initialNewsletters,
+  isSuperAdmin,
+}: {
+  initialNewsletters: Newsletter[];
+  isSuperAdmin: boolean;
+}) {
   const [newsletters, setNewsletters] = useState<Newsletter[]>(initialNewsletters);
 
   async function togglePublished(id: number, current: boolean) {
@@ -43,21 +49,23 @@ export default function NewslettersTable({ initialNewsletters }: { initialNewsle
             <th>Subject</th>
             <th>Sent</th>
             <th>Status</th>
-            <th>Actions</th>
+            {isSuperAdmin && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {newsletters.length === 0 && (
             <tr>
-              <td colSpan={5} className="text-center text-gray-400 py-8">No newsletters found.</td>
+              <td colSpan={isSuperAdmin ? 5 : 4} className="text-center text-gray-400 py-8">
+                No newsletters found.
+              </td>
             </tr>
           )}
           {newsletters.map((n) => (
             <tr key={n.id}>
-              <td className="max-w-[200px]">
+              <td className="max-w-50">
                 <span className="text-gray-900 font-medium line-clamp-1">{n.title}</span>
               </td>
-              <td className="max-w-[240px] text-gray-600 line-clamp-1">{n.subject}</td>
+              <td className="max-w-60 text-gray-600 line-clamp-1">{n.subject}</td>
               <td className="whitespace-nowrap text-gray-500">
                 {n.sent_at ? formatDate(n.sent_at) : '—'}
               </td>
@@ -68,28 +76,30 @@ export default function NewslettersTable({ initialNewsletters }: { initialNewsle
                   {n.published ? 'Published' : 'Draft'}
                 </span>
               </td>
-              <td>
-                <div className="flex gap-3 whitespace-nowrap">
-                  <Link
-                    href={`/newsletters/${n.id}/edit`}
-                    className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => togglePublished(n.id, n.published)}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    {n.published ? 'Unpublish' : 'Publish'}
-                  </button>
-                  <button
-                    onClick={() => deleteNewsletter(n.id)}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
+              {isSuperAdmin && (
+                <td>
+                  <div className="flex gap-3 whitespace-nowrap">
+                    <Link
+                      href={`/newsletters/${n.id}/edit`}
+                      className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => togglePublished(n.id, n.published)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      {n.published ? 'Unpublish' : 'Publish'}
+                    </button>
+                    <button
+                      onClick={() => deleteNewsletter(n.id)}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

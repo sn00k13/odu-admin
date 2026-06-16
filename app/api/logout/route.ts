@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST() {
-  const jar = await cookies();
-  jar.delete('odu_admin_auth');
+  const sb = await createClient();
+  await sb.auth.signOut();
   return NextResponse.json({ ok: true });
 }

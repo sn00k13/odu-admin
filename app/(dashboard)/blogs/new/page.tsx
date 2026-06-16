@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { isSuperAdmin } from '@/lib/auth';
 import BlogForm from '@/components/BlogForm';
 
 export const metadata: Metadata = { title: 'New Blog Post' };
 
-export default function NewBlogPage() {
+export default async function NewBlogPage() {
+  if (!(await isSuperAdmin())) redirect('/blogs');
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-8">

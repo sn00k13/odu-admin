@@ -2,18 +2,27 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, FolderKanban, Mail, Users, MessageSquare, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  FileText,
+  FolderKanban,
+  Mail,
+  Users,
+  MessageSquare,
+  Settings,
+  LogOut,
+} from 'lucide-react';
 
 const NAV = [
-  { href: '/',             label: 'Overview',     icon: LayoutDashboard },
-  { href: '/blogs',        label: 'Blogs',        icon: FileText },
-  { href: '/projects',     label: 'Projects',     icon: FolderKanban },
-  { href: '/newsletters',  label: 'Newsletters',  icon: Mail },
-  { href: '/subscribers',  label: 'Subscribers',  icon: Users },
-  { href: '/comments',     label: 'Comments',     icon: MessageSquare },
+  { href: '/',            label: 'Overview',    icon: LayoutDashboard },
+  { href: '/blogs',       label: 'Blogs',       icon: FileText },
+  { href: '/projects',    label: 'Projects',    icon: FolderKanban },
+  { href: '/newsletters', label: 'Newsletters', icon: Mail },
+  { href: '/subscribers', label: 'Subscribers', icon: Users },
+  { href: '/comments',    label: 'Comments',    icon: MessageSquare },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -48,6 +57,20 @@ export default function AdminSidebar() {
             </Link>
           );
         })}
+
+        {isSuperAdmin && (
+          <Link
+            href="/settings"
+            className={`flex items-center gap-3 px-3 py-2 rounded text-sm font-medium transition-colors ${
+              pathname.startsWith('/settings')
+                ? 'bg-red-50 text-red-600'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            <Settings size={16} />
+            Settings
+          </Link>
+        )}
       </nav>
 
       <button

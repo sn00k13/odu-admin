@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { isSuperAdmin } from '@/lib/auth';
 import ProjectForm from '@/components/ProjectForm';
 
 export const metadata: Metadata = { title: 'New Project' };
 
-export default function NewProjectPage() {
+export default async function NewProjectPage() {
+  if (!(await isSuperAdmin())) redirect('/projects');
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-8">

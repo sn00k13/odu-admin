@@ -53,3 +53,10 @@ export interface Subscriber {
   subscribed: boolean;
   created_at: string;
 }
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: 'super_admin' | 'admin';
+  created_at: string;
+}

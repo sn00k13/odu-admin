@@ -6,7 +6,13 @@ import type { Blog } from '@/lib/types';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theoduproject.com';
 
-export default function BlogsTable({ initialBlogs }: { initialBlogs: Blog[] }) {
+export default function BlogsTable({
+  initialBlogs,
+  isSuperAdmin,
+}: {
+  initialBlogs: Blog[];
+  isSuperAdmin: boolean;
+}) {
   const [blogs, setBlogs] = useState<Blog[]>(initialBlogs);
 
   async function togglePublished(id: number, current: boolean) {
@@ -40,18 +46,20 @@ export default function BlogsTable({ initialBlogs }: { initialBlogs: Blog[] }) {
             <th>Category</th>
             <th>Views</th>
             <th>Status</th>
-            <th>Actions</th>
+            {isSuperAdmin && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {blogs.length === 0 && (
             <tr>
-              <td colSpan={6} className="text-center text-gray-400 py-8">No blogs found.</td>
+              <td colSpan={isSuperAdmin ? 6 : 5} className="text-center text-gray-400 py-8">
+                No blogs found.
+              </td>
             </tr>
           )}
           {blogs.map((b) => (
             <tr key={b.id}>
-              <td className="max-w-[220px]">
+              <td className="max-w-55">
                 <a
                   href={`${SITE_URL}/blog/${b.id}`}
                   target="_blank"
@@ -73,28 +81,30 @@ export default function BlogsTable({ initialBlogs }: { initialBlogs: Blog[] }) {
                   {b.published ? 'Published' : 'Draft'}
                 </span>
               </td>
-              <td>
-                <div className="flex gap-3 whitespace-nowrap">
-                  <Link
-                    href={`/blogs/${b.id}/edit`}
-                    className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => togglePublished(b.id, b.published)}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    {b.published ? 'Unpublish' : 'Publish'}
-                  </button>
-                  <button
-                    onClick={() => deleteBlog(b.id)}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
+              {isSuperAdmin && (
+                <td>
+                  <div className="flex gap-3 whitespace-nowrap">
+                    <Link
+                      href={`/blogs/${b.id}/edit`}
+                      className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => togglePublished(b.id, b.published)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      {b.published ? 'Unpublish' : 'Publish'}
+                    </button>
+                    <button
+                      onClick={() => deleteBlog(b.id)}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

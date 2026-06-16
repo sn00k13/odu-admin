@@ -6,7 +6,13 @@ import type { Project } from '@/lib/types';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theoduproject.com';
 
-export default function ProjectsTable({ initialProjects }: { initialProjects: Project[] }) {
+export default function ProjectsTable({
+  initialProjects,
+  isSuperAdmin,
+}: {
+  initialProjects: Project[];
+  isSuperAdmin: boolean;
+}) {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
 
   async function togglePublished(id: number, current: boolean) {
@@ -38,18 +44,20 @@ export default function ProjectsTable({ initialProjects }: { initialProjects: Pr
             <th>Title</th>
             <th>Category</th>
             <th>Status</th>
-            <th>Actions</th>
+            {isSuperAdmin && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {projects.length === 0 && (
             <tr>
-              <td colSpan={4} className="text-center text-gray-400 py-8">No projects found.</td>
+              <td colSpan={isSuperAdmin ? 4 : 3} className="text-center text-gray-400 py-8">
+                No projects found.
+              </td>
             </tr>
           )}
           {projects.map((p) => (
             <tr key={p.id}>
-              <td className="max-w-[280px]">
+              <td className="max-w-70">
                 <a
                   href={`${SITE_URL}/projects/${p.id}`}
                   target="_blank"
@@ -67,28 +75,30 @@ export default function ProjectsTable({ initialProjects }: { initialProjects: Pr
                   {p.published ? 'Published' : 'Draft'}
                 </span>
               </td>
-              <td>
-                <div className="flex gap-3 whitespace-nowrap">
-                  <Link
-                    href={`/projects/${p.id}/edit`}
-                    className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => togglePublished(p.id, p.published)}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    {p.published ? 'Unpublish' : 'Publish'}
-                  </button>
-                  <button
-                    onClick={() => deleteProject(p.id)}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
+              {isSuperAdmin && (
+                <td>
+                  <div className="flex gap-3 whitespace-nowrap">
+                    <Link
+                      href={`/projects/${p.id}/edit`}
+                      className="text-xs text-gray-600 hover:text-gray-900 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => togglePublished(p.id, p.published)}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      {p.published ? 'Unpublish' : 'Publish'}
+                    </button>
+                    <button
+                      onClick={() => deleteProject(p.id)}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
